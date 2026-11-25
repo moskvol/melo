@@ -15,12 +15,21 @@
 ## Быстрый старт
 
 1. Создайте новый проект в [Supabase](https://supabase.com/dashboard).
-2. В **SQL Editor** выполните весь файл [`supabase/migrations/20261125000000_melo.sql`](supabase/migrations/20261125000000_melo.sql). Нужен отдельный новый проект: миграция создаёт таблицы, политики RLS, триггеры и два Storage bucket.
+2. В **SQL Editor** выполните SQL-файлы из [`supabase/migrations/`](supabase/migrations/) по порядку. Нужен отдельный новый проект: миграции создают таблицы, политики RLS, триггеры, индексы и два Storage bucket.
 3. В **Authentication → Providers → Email** включите подтверждение email. Настройте SMTP для реальной доставки писем (встроенный отправитель Supabase предназначен для ограниченного тестирования).
 4. В **Authentication → URL Configuration** укажите Site URL (`http://localhost:5173/` локально) и добавьте Redirect URLs для локального адреса и GitHub Pages (`https://OWNER.github.io/REPO/`). Для восстановления пароля ссылка должна вернуться на тот же адрес.
-5. Из **Project Settings → API Keys** возьмите Project URL и **publishable key** (`sb_publishable_...`). Никогда не вставляйте secret или `service_role` key в приложение.
-6. Скопируйте `.env.example` в `.env.local` и заполните `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`.
-7. Запустите команды:
+5. Для входа по коду откройте **Authentication → Email Templates → Magic Link** и замените содержимое письма на шаблон с `{{ .Token }}`. Например:
+
+   ```html
+   <h2>Код входа в Melo</h2>
+   <p>Введите этот шестизначный код в Melo: <strong>{{ .Token }}</strong></p>
+   <p>Если вы не запрашивали код, проигнорируйте письмо.</p>
+   ```
+
+   Supabase отправляет ссылку по умолчанию; без изменения шаблона экран ввода кода не сможет получить код из письма. Вход по коду доступен существующим пользователям и не создаёт аккаунт.
+6. Из **Project Settings → API Keys** возьмите Project URL и **publishable key** (`sb_publishable_...`). Никогда не вставляйте secret или `service_role` key в приложение.
+7. Скопируйте `.env.example` в `.env.local` и заполните `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`.
+8. Запустите команды:
 
    ```bash
    npm ci
@@ -53,6 +62,10 @@
 5. Workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) запускает `npm ci`, сборку и публикацию. `VITE_BASE_PATH` вычисляется из имени репозитория. Приложение не использует серверные маршруты и совместимо с Pages.
 
 Для репозитория вида `OWNER.github.io` (публикация в корне домена) измените `VITE_BASE_PATH` на `/` в workflow.
+
+### Текущая публикация
+
+Код опубликован в [moskvol/melo](https://github.com/moskvol/melo), сайт — [moskvol.github.io/melo](https://moskvol.github.io/melo/). Схема уже применена к проекту Supabase, а публичные клиентские переменные заданы для GitHub Actions. Для писем укажите `https://moskvol.github.io/melo/` как Site URL и Redirect URL в Supabase Auth, настройте шаблон Magic Link выше и подключите собственный SMTP для реальной доставки. Встроенная отправка Supabase имеет строгие лимиты; во время проверки сервер вернул `email rate limit exceeded`.
 
 ## Безопасность и ограничения
 
