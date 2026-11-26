@@ -345,3 +345,11 @@ input[type=file][hidden]{display:none!important}
 .melo-channel-admins{width:100%;max-width:520px;flex-shrink:0;text-align:left}.melo-channel-info{align-items:center}
 .melo-channel-media-selection:empty{display:none}.melo-channel-media-selection{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;min-width:0;background:var(--surface);border-radius:16px;margin-bottom:6px;font-size:13px}.melo-channel-media-selection span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .melo-channel-media-selection button{background:transparent;color:var(--muted)}
+
+
+/* Unified tools workspace */
+.melo-tools-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:5px;border-radius:22px;background:var(--surface-container);flex:none}
+.melo-tools-tabs button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;min-width:0;padding:8px 10px;border-radius:17px;color:var(--muted);background:transparent;font-size:13px;font-weight:650;transition:background .2s,border-radius .3s var(--melo-spring)}
+.melo-tools-tabs button.active{background:color-mix(in srgb,var(--accent) 18%,var(--surface));color:var(--accent);border-radius:13px 22px 13px 22px}
+.melo-tools-tabs button span:not(.material-symbols-rounded){overflow-wrap:anywhere;line-height:1.2}
+@media(max-width:840px),(pointer:coarse) and (max-width:1100px){.melo-tools-tabs{gap:4px;padding:4px}.melo-tools-tabs button{flex-direction:column;gap:4px;padding:7px 3px;min-height:55px;font-size:11px}.bottom-nav button{flex:1 1 0;min-width:0}.bottom-nav button .material-symbols-rounded{max-width:100%}}
