@@ -259,13 +259,14 @@ function App() {
   }, [user?.id])
   useEffect(()=>{
     if(!user||!db||recovery)return
-    const client=db,uid=user.id;let live=true,lastHash:string|null=null
+    const client=db,uid=user.id;let live=true,initial=true
     const apply=async()=>{
-      const hash=location.hash;if(hash===lastHash)return;lastHash=hash
+      const hash=location.hash;const first=initial;initial=false
       const version=++routeVersion.current,route=parseRoute(hash)
       const current=()=>live&&routeVersion.current===version&&location.hash===hash
       const fail=(message:string)=>{if(!current())return;setError(message);showPage('chats');writeHash(pageHash('chats'),true)}
-      if(route.kind==='auth'||route.kind==='username')return
+      if(route.kind==='auth')return
+      if(route.kind==='username'){if(first)showPage('chats');return}
       if(route.kind==='page'){showPage(route.page);if(!hash||hash==='#'||hash==='#/')writeHash(pageHash(route.page),true);return}
       if(route.kind==='unknown'){fail('Страница не найдена');return}
       showPage('chats')
@@ -286,8 +287,8 @@ function App() {
       }catch(e){fail(errorText(e))}
     }
     const onRoute=()=>{void apply()}
-    onRoute();window.addEventListener('hashchange',onRoute);window.addEventListener('popstate',onRoute)
-    return()=>{live=false;routeVersion.current++;window.removeEventListener('hashchange',onRoute);window.removeEventListener('popstate',onRoute)}
+    onRoute();window.addEventListener('hashchange',onRoute)
+    return()=>{live=false;routeVersion.current++;window.removeEventListener('hashchange',onRoute)}
   },[user?.id,recovery])
   useEffect(() => {
     if (!selected || !db || !user) { setMessages([]); return }
@@ -590,7 +591,7 @@ function UsernameList({userId,primary}:{userId:string;primary:string}){
 function CollectibleUsernameDialog({me,onOpenProfile}:{me:string;onOpenProfile:(p:Profile)=>void}){
  const [name,setName]=useState(''),[entry,setEntry]=useState<PremiumName|null>(null),[owner,setOwner]=useState<Profile|null>(null),[loading,setLoading]=useState(false),[error,setError]=useState(''),[copied,setCopied]=useState(false);
  const previous=useRef(pageHash('chats'));const close=()=>{setName('');if(parseRoute(location.hash).kind==='username')writeHash(previous.current,true)};
- useEffect(()=>{const event=(e:Event)=>{const n=(e as CustomEvent<string>).detail;if(typeof n!=='string'||!/^[a-z][a-z0-9_]{3,23}$/.test(n))return;if(parseRoute(location.hash).kind!=='username')previous.current=location.hash||pageHash('chats');writeHash(usernameHash(n));setName(n)};const hash=()=>{const r=parseRoute(location.hash);if(r.kind==='username')setName(r.username);else{previous.current=location.hash||pageHash('chats');setName('')}};hash();window.addEventListener('melo-collectible-name',event);window.addEventListener('hashchange',hash);window.addEventListener('popstate',hash);return()=>{window.removeEventListener('melo-collectible-name',event);window.removeEventListener('hashchange',hash);window.removeEventListener('popstate',hash)}},[me]);
+ useEffect(()=>{const event=(e:Event)=>{const n=(e as CustomEvent<string>).detail;if(typeof n!=='string'||!/^[a-z][a-z0-9_]{3,23}$/.test(n))return;if(parseRoute(location.hash).kind!=='username')previous.current=location.hash||pageHash('chats');writeHash(usernameHash(n));setName(n)};const hash=()=>{const r=parseRoute(location.hash);if(r.kind==='username')setName(r.username);else{previous.current=location.hash||pageHash('chats');setName('')}};hash();window.addEventListener('melo-collectible-name',event);window.addEventListener('hashchange',hash);return()=>{window.removeEventListener('melo-collectible-name',event);window.removeEventListener('hashchange',hash)}},[me]);
  useEffect(()=>{let live=true;setEntry(null);setOwner(null);setError('');setCopied(false);if(!name||!db)return;setLoading(true);async function load(){const {data,error}=await db!.from('melo_premium_names').select('*').eq('username',name).maybeSingle();if(!live)return;if(error||!data?.assigned_to){setError(error?.message||'Коллекционное имя не найдено');setLoading(false);return}setEntry(data as PremiumName);const p=await db!.from('profiles').select('*').eq('id',data.assigned_to).maybeSingle();if(!live)return;if(p.error||!p.data)setError(p.error?.message||'Владелец не найден');else setOwner(p.data as Profile);setLoading(false)}load();return()=>{live=false}},[name]);
  useEffect(()=>{if(!name)return;const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.stopPropagation();close()}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key)},[name]);
  async function copy(){try{await navigator.clipboard.writeText(location.origin+import.meta.env.BASE_URL+usernameHash(name));setCopied(true)}catch{setError('Не удалось скопировать ссылку')}}
