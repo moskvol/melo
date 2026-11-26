@@ -1,7 +1,6 @@
 import { useState,useEffect,useCallback } from 'react'
 import { motion } from 'motion/react'
 import { db,errorText } from './lib'
-type StatusProps={me:string}
 export const statusEmojis=['','💜','⭐','🔥','🌙','🎧','💻','🎮','✨','🚀','💎','👑','🌈']
 function msg(e:unknown){return e&&typeof e==='object'&&'message' in e?String(e.message):errorText(e)}
 type Saved={id:string;body:string;created_at:string}
