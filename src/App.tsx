@@ -6,7 +6,8 @@ import { AnimatePresence, motion } from 'motion/react'
 import { avatarUrl, configured, date, db, displayName, errorText, initials, loadChats, loadMessages, loadReactions, searchProfiles, time, uploadAvatar, uploadChatFile } from './lib'
 import type { Chat, Message, Profile, Reaction } from './lib'
 
-type Page = 'chats' | 'contacts' | 'search' | 'profile' | 'settings' | 'admin' | 'community' | 'stats' | 'market' | 'gifts' | 'marketAdmin'
+import { parseRoute, pageHash, chatHash, channelHash, usernameHash, inviteHash, writeHash } from './routes'
+import type { Page } from './routes'
 type MeloChannel = {id:string;owner_id:string;name:string;description:string;username:string;avatar_path:string|null;subscriber_count:number;latest_post:string|null;latest_post_at:string|null;created_at:string}
 type ChannelPost={id:string;body:string;created_at:string}
 type AuthMode = 'login' | 'register' | 'reset' | 'update' | 'otp' | 'otp_verify' | 'signup_verify'
@@ -136,6 +137,8 @@ function App() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [chats, setChats] = useState<Chat[]>([])
   const [selected, setSelected] = useState<string | null>(null)
+  const selectedRef=useRef<string|null>(null)
+  const routeVersion=useRef(0)
   const [messages, setMessages] = useState<Message[]>([])
   const [reactions, setReactions] = useState<Reaction[]>([])
   const [people, setPeople] = useState<Record<string, Profile>>({})
@@ -182,7 +185,6 @@ function App() {
   const discardRecording=useRef(false)
   const requestingMic=useRef(false)
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const inviteHandled = useRef(false)
   const dialogFocus = useRef<HTMLElement | null>(null)
 
   const unreadTotal=chats.reduce((n,c)=>n+c.unread,0)
@@ -199,7 +201,7 @@ function App() {
     try { setChats(await loadChats(user.id)) } catch (x) { setError(errorText(x)) }
   }, [user])
   const refreshMessages = useCallback(async (id: string) => {
-    try { const rows = await loadMessages(id); setMessages(rows); setReactions(await loadReactions(rows.map(x => x.id))) } catch (x) { setError(errorText(x)) }
+    try { const rows = await loadMessages(id); if(selectedRef.current!==id)return;setMessages(rows);const rs=await loadReactions(rows.map(x => x.id));if(selectedRef.current===id)setReactions(rs) } catch (x) { if(selectedRef.current===id)setError(errorText(x)) }
   }, [])
 
   useEffect(() => {
@@ -255,12 +257,38 @@ function App() {
     document.addEventListener('visibilitychange', update)
     return () => { clearInterval(interval); document.removeEventListener('visibilitychange', update) }
   }, [user?.id])
-  useEffect(() => {
-    if (!user || !db || inviteHandled.current || !window.location.hash.startsWith('#invite=')) return
-    inviteHandled.current = true
-    const invite = window.location.hash.slice(8)
-    db.rpc('join_group', { invite }).then(async ({ data, error }) => { if (error) setError(error.message); else { await refreshChats(); openChat(data as string); setNotice('Вы присоединились к группе') } history.replaceState(null, '', window.location.pathname + window.location.search) })
-  }, [user?.id, refreshChats])
+  useEffect(()=>{
+    if(!user||!db||recovery)return
+    const client=db,uid=user.id;let live=true,lastHash:string|null=null
+    const apply=async()=>{
+      const hash=location.hash;if(hash===lastHash)return;lastHash=hash
+      const version=++routeVersion.current,route=parseRoute(hash)
+      const current=()=>live&&routeVersion.current===version&&location.hash===hash
+      const fail=(message:string)=>{if(!current())return;setError(message);showPage('chats');writeHash(pageHash('chats'),true)}
+      if(route.kind==='auth'||route.kind==='username')return
+      if(route.kind==='page'){showPage(route.page);if(!hash||hash==='#'||hash==='#/')writeHash(pageHash(route.page),true);return}
+      if(route.kind==='unknown'){fail('Страница не найдена');return}
+      showPage('chats')
+      try{
+        if(route.kind==='channel'){
+          const {data,error}=await client.from('melo_channels').select('*').eq('username',route.username).maybeSingle()
+          if(!current())return;if(error||!data){fail(error?.message||'Канал не найден');return}showChannel(data as MeloChannel);return
+        }
+        if(route.kind==='chat'){
+          const {data,error}=await client.from('conversation_members').select('conversation_id').eq('conversation_id',route.id).eq('user_id',uid).maybeSingle()
+          if(!current())return;if(error||!data){fail(error?.message||'Чат недоступен');return}showChat(route.id);refreshChats();return
+        }
+        if(route.kind==='invite'){
+          const {data,error}=await client.rpc('join_group',{invite:route.token})
+          if(!current())return;if(error||!data){fail(error?.message||'Приглашение недействительно');return}
+          await refreshChats();if(!current())return;showChat(data as string);writeHash(chatHash(data as string),true);setNotice('Вы присоединились к группе')
+        }
+      }catch(e){fail(errorText(e))}
+    }
+    const onRoute=()=>{void apply()}
+    onRoute();window.addEventListener('hashchange',onRoute);window.addEventListener('popstate',onRoute)
+    return()=>{live=false;routeVersion.current++;window.removeEventListener('hashchange',onRoute);window.removeEventListener('popstate',onRoute)}
+  },[user?.id,recovery])
   useEffect(() => {
     if (!selected || !db || !user) { setMessages([]); return }
     refreshMessages(selected)
@@ -313,9 +341,13 @@ function App() {
     try { await action(); if (success) setNotice(success) } catch (x) { setError(errorText(x)) } finally { setBusy(false) }
   }
   function cancelRecording(){discardRecording.current=true;if(recordRef.current?.state==='recording')recordRef.current.stop();setRecording(false)}
-  function openChannel(c:MeloChannel){cancelRecording();setActiveChannel(c);setSelected(null);setPage('chats');setMobileOpen(true);setDialog(null);setQuery('')}
-  function openChat(id: string) { setActiveChannel(null);if(id!==selected)cancelRecording();setSelected(id); setPage('chats'); setDialog(null); setMobileOpen(true); setMessageMenu(null); setChatSearch('') }
-  function navigate(id:Page){if((id==='admin'&&!siteAdmin)||((id==='stats'||id==='marketAdmin')&&!siteOwner))return;cancelRecording();setActiveChannel(null);setPage(id);setMobileOpen(false);setQuery('');setMessageMenu(null)}
+  function selectConversation(id:string|null){if(selectedRef.current!==id){selectedRef.current=id;setMessages([]);setReactions([]);setPeople({});setFileUrls({});setReply(null);setTyping(false)}setSelected(id)}
+  function showChannel(c:MeloChannel){cancelRecording();setActiveChannel(c);selectConversation(null);setPage('chats');setMobileOpen(true);setDialog(null);setQuery('');setMessageMenu(null)}
+  function showChat(id:string){if(id!==selectedRef.current)cancelRecording();setActiveChannel(null);selectConversation(id);setPage('chats');setDialog(null);setMobileOpen(true);setMessageMenu(null);setChatSearch('');setQuery('')}
+  function showPage(id:Page){cancelRecording();setActiveChannel(null);selectConversation(null);setPage(id);setMobileOpen(false);setDialog(null);setQuery('');setMessageMenu(null)}
+  function openChannel(c:MeloChannel){routeVersion.current++;showChannel(c);writeHash(channelHash(c.username))}
+  function openChat(id:string){routeVersion.current++;showChat(id);writeHash(chatHash(id))}
+  function navigate(id:Page){if((id==='admin'&&!siteAdmin)||((id==='stats'||id==='marketAdmin')&&!siteOwner))return;routeVersion.current++;showPage(id);writeHash(pageHash(id))}
   async function startDirect(p: Profile) {
     if (!db) return
     await run(async () => { const { data, error } = await db!.rpc('create_direct_chat', { other_user: p.id }); if (error) throw error; await refreshChats(); openChat(data as string) })
@@ -395,7 +427,7 @@ function App() {
   if (!configured) return <div className="setup"><div className="brand-mark"><Icon name="chat_bubble" filled /></div><h1>Melo готов к подключению</h1><p>Создайте проект Supabase, выполните SQL-миграцию и заполните <code>.env</code> по образцу <code>.env.example</code>. Подробные шаги есть в README.md.</p></div>
   if (booting) return <div className="splash"><div className="brand-mark"><Icon name="chat_bubble" filled /></div><Loader/></div>
   if (!online && !user) return <div className="setup offline-screen"><Icon name="wifi_off" size={50}/><h1>Нет подключения</h1><p>Проверьте сеть и откройте Melo снова. Интерфейс доступен офлайн, переписка загрузится после подключения.</p><Button icon="refresh" className="primary" onClick={() => window.location.reload()}>Повторить</Button></div>
-  if (!user || recovery) return <><Auth onNotice={setNotice} recovery={recovery} onRecoveryDone={() => { setRecovery(false); history.replaceState(null, '', window.location.pathname + window.location.search) }}/>{notice && <div className="toast" role="status">{notice}</div>}</>
+  if (!user || recovery) return <><Auth onNotice={setNotice} recovery={recovery} onRecoveryDone={() => { writeHash(pageHash('chats'),true);setRecovery(false) }}/>{notice && <div className="toast" role="status">{notice}</div>}</>
 
   const workspace=page==='admin'||page==='stats'||page==='marketAdmin'||page==='market'||page==='gifts'
   const navItems:[Page,string,string,string][]=[['chats','forum','Чаты','Чаты'],['contacts','group','Контакты','Контакты'],['search','search','Поиск','Поиск'],['market','storefront','Маркет','Маркет'],['gifts','redeem','Подарки','Подарки'],['profile','person','Профиль','Профиль'],...(siteAdmin?[['admin','admin_panel_settings','Админ-панель','Админ'] as [Page,string,string,string]]:[])]
@@ -424,7 +456,7 @@ function App() {
     </section>}
 
     <main className={`conversation ${mobileOpen ? 'mobile-open' : ''} ${workspace?'melo-workspace':''}`}>
-      {page==='admin'?(siteAdmin?<AdminPanel owner={siteOwner} me={user.id} onBack={()=>navigate('profile')} onChange={refreshOwnProfile} onStats={()=>navigate('stats')} onMarketManage={()=>navigate('marketAdmin')}/>:<div className="panel-scroll">Нет доступа</div>):page==='market'||page==='gifts'||page==='marketAdmin'?(page==='marketAdmin'&&!siteOwner?<div className="panel-scroll">Нет доступа</div>:<MeloMarket key={page} tab={page==='gifts'?'collection':page==='market'?'names':'manage'} me={user.id} owner={siteOwner} onBack={()=>navigate(page==='marketAdmin'?'admin':'profile')} onProfileRefresh={refreshOwnProfile}/>):page==='stats'?(siteOwner?<OwnerStats onBack={()=>navigate('admin')}/>:<div className="panel-scroll"><Button onClick={()=>navigate('profile')}>Назад</Button><p>Нет доступа</p></div>):page==='chats'&&activeChannel?<ChannelFeed key={activeChannel.id} channel={activeChannel} me={user.id} subscribed={subscriptions.includes(activeChannel.id)} onBack={()=>{setMobileOpen(false);setActiveChannel(null)}} onRefresh={refreshChannels} onError={setError}/>:page === 'chats' && chat ? <><header className="conversation-head"><button className="mobile-back icon-button" onClick={() => {cancelRecording();setMobileOpen(false)}} title="Назад"><Icon name="arrow_back" /></button><Avatar name={chatName} path={chat.kind === 'group' ? chat.avatar_path : chat.peer?.avatar_path} group={chat.kind === 'group'} size={44}/><div className="conversation-title"><b><span className="melo-name">{chatName}</span>{chat.kind === 'direct' && <><Verified profile={chat.peer}/><Awards profile={chat.peer}/></>}</b><small>{typing ? 'печатает…' : chat.kind === 'group' ? `${chat.members.length} участников` : chat.peer?.show_online && chat.peer?.last_seen_at && Date.now() - new Date(chat.peer.last_seen_at).getTime() < 120000 ? 'в сети' : chat.peer?.show_last_seen && chat.peer?.last_seen_at ? `был(а) ${date(chat.peer.last_seen_at)} в ${time(chat.peer.last_seen_at)}` : `@${chat.peer?.username || ''}`}</small></div><button className="icon-button" onClick={() => setChatSearch(chatSearch === '__open__' ? '' : '__open__')} title="Поиск по чату"><Icon name="search" /></button><button className="icon-button" title="Папка или архив" onClick={()=>setDialog('organize')}><Icon name="folder"/></button><button className="icon-button" onClick={() => setDialog('manage')} title="Информация о чате"><Icon name="more_vert" /></button></header>
+      {page==='admin'?(siteAdmin?<AdminPanel owner={siteOwner} me={user.id} onBack={()=>navigate('profile')} onChange={refreshOwnProfile} onStats={()=>navigate('stats')} onMarketManage={()=>navigate('marketAdmin')}/>:<div className="panel-scroll">Нет доступа</div>):page==='market'||page==='gifts'||page==='marketAdmin'?(page==='marketAdmin'&&!siteOwner?<div className="panel-scroll">Нет доступа</div>:<MeloMarket key={page} tab={page==='gifts'?'collection':page==='market'?'names':'manage'} me={user.id} owner={siteOwner} onBack={()=>navigate(page==='marketAdmin'?'admin':'profile')} onProfileRefresh={refreshOwnProfile}/>):page==='stats'?(siteOwner?<OwnerStats onBack={()=>navigate('admin')}/>:<div className="panel-scroll"><Button onClick={()=>navigate('profile')}>Назад</Button><p>Нет доступа</p></div>):page==='chats'&&activeChannel?<ChannelFeed key={activeChannel.id} channel={activeChannel} me={user.id} subscribed={subscriptions.includes(activeChannel.id)} onBack={()=>navigate('chats')} onRefresh={refreshChannels} onError={setError}/>:page === 'chats' && chat ? <><header className="conversation-head"><button className="mobile-back icon-button" onClick={()=>navigate('chats')} title="Назад"><Icon name="arrow_back" /></button><Avatar name={chatName} path={chat.kind === 'group' ? chat.avatar_path : chat.peer?.avatar_path} group={chat.kind === 'group'} size={44}/><div className="conversation-title"><b><span className="melo-name">{chatName}</span>{chat.kind === 'direct' && <><Verified profile={chat.peer}/><Awards profile={chat.peer}/></>}</b><small>{typing ? 'печатает…' : chat.kind === 'group' ? `${chat.members.length} участников` : chat.peer?.show_online && chat.peer?.last_seen_at && Date.now() - new Date(chat.peer.last_seen_at).getTime() < 120000 ? 'в сети' : chat.peer?.show_last_seen && chat.peer?.last_seen_at ? `был(а) ${date(chat.peer.last_seen_at)} в ${time(chat.peer.last_seen_at)}` : `@${chat.peer?.username || ''}`}</small></div><button className="icon-button" onClick={() => setChatSearch(chatSearch === '__open__' ? '' : '__open__')} title="Поиск по чату"><Icon name="search" /></button><button className="icon-button" title="Папка или архив" onClick={()=>setDialog('organize')}><Icon name="folder"/></button><button className="icon-button" onClick={() => setDialog('manage')} title="Информация о чате"><Icon name="more_vert" /></button></header>
           {chatSearch === '__open__' || (chatSearch && chatSearch !== '__open__') ? <div className="chat-search"><Icon name="search"/><input autoFocus placeholder="Поиск в переписке" value={chatSearch === '__open__' ? '' : chatSearch} onChange={e => setChatSearch(e.target.value || '__open__')}/><button onClick={() => setChatSearch('')} title="Закрыть"><Icon name="close"/></button></div> : null}
           {messages.some(x => x.pinned && !x.deleted_at) && <button className="pinned" onClick={() => { const el = document.getElementById(`msg-${messages.find(x => x.pinned && !x.deleted_at)?.id}`); el?.scrollIntoView({ behavior: 'smooth', block: 'center' }) }}><Icon name="push_pin" size={19}/><span>{messages.find(x => x.pinned && !x.deleted_at)?.body || 'Закреплённое сообщение'}</span></button>}
           <div className="messages" role="log" aria-live="polite">{messages.filter(x => !chatSearch || chatSearch === '__open__' || x.body.toLowerCase().includes(chatSearch.toLowerCase())).map((m, i) => {
@@ -462,7 +494,7 @@ function App() {
       {dialog === 'new' && <><h2>Новый разговор</h2><p className="muted">Найдите человека или создайте группу</p><div className="searchbox"><Icon name="search"/><input autoFocus placeholder="Имя или @username" value={query} onChange={e => setQuery(e.target.value)}/></div><button className="option-row" onClick={() => setDialog('group')}><span className="option-icon"><Icon name="group_add"/></span><b>Создать группу</b><Icon name="chevron_right"/></button><button className="option-row" onClick={()=>setDialog('createChannel')}><span className="option-icon"><Icon name="campaign"/></span><b>Создать канал</b><Icon name="chevron_right"/></button><div className="dialog-results">{results.filter(p => p.id !== user.id).map(p => <button key={p.id} className="person-row" onClick={() => startDirect(p)}><Avatar name={displayName(p)} path={p.avatar_path}/><span><b>{displayName(p)}<Verified profile={p}/><Awards profile={p}/></b><small>@{p.username}</small></span></button>)}</div></>}
       {dialog==='createChannel'&&<ChannelCreate me={user.id} onCreated={c=>{refreshChannels();openChannel(c)}}/>}{dialog === 'group' && <GroupCreate onCreate={async (name, description) => { if (!db) return; await run(async () => { const { data, error } = await db!.rpc('create_group_chat', { group_name: name, group_description: description }); if (error) throw error; await refreshChats(); openChat(data as string) }, 'Группа создана') }} busy={busy}/>}
       {dialog === 'forward' && <><h2>Переслать сообщение</h2><p className="muted">Выберите чат</p><div className="forward-list">{chats.map(x => <button key={x.id} className="person-row" onClick={() => forwardTo(x)}><Avatar name={x.kind === 'group' ? x.name || 'Группа' : displayName(x.peer)} path={x.kind === 'group' ? x.avatar_path : x.peer?.avatar_path} group={x.kind === 'group'}/><b>{x.kind === 'group' ? x.name : displayName(x.peer)}</b></button>)}</div></>}
-      {dialog === 'organize' && chat && <OrganizeChat chat={chat} me={user.id} onSave={()=>{refreshChats();setDialog(null)}} onError={setError}/>}{dialog === 'manage' && chat && <ManageChat chat={chat} people={people} me={user.id} isAdmin={isAdmin} onRefresh={refreshChats} onClose={() => setDialog(null)} onLeave={() => { setSelected(null); setMobileOpen(false) }} onError={setError} onNotice={setNotice}/>}
+      {dialog === 'organize' && chat && <OrganizeChat chat={chat} me={user.id} onSave={()=>{refreshChats();setDialog(null)}} onError={setError}/>}{dialog === 'manage' && chat && <ManageChat chat={chat} people={people} me={user.id} isAdmin={isAdmin} onRefresh={refreshChats} onClose={() => setDialog(null)} onLeave={()=>navigate('chats')} onError={setError} onNotice={setNotice}/>}
       {dialog === 'deleteAccount' && <><h2>Удалить аккаунт?</h2><p className="muted">Профиль и ваши сообщения будут удалены без возможности восстановления. Для подтверждения введите «УДАЛИТЬ».</p><DeleteConfirm onConfirm={() => run(async () => { const { error } = await db!.rpc('delete_my_account'); if (error) throw error; await db!.auth.signOut(); setDialog(null) })} busy={busy}/></>}
     </motion.div></motion.div>}</AnimatePresence>
   </div>
@@ -557,11 +589,11 @@ function UsernameList({userId,primary}:{userId:string;primary:string}){
 }
 function CollectibleUsernameDialog({me,onOpenProfile}:{me:string;onOpenProfile:(p:Profile)=>void}){
  const [name,setName]=useState(''),[entry,setEntry]=useState<PremiumName|null>(null),[owner,setOwner]=useState<Profile|null>(null),[loading,setLoading]=useState(false),[error,setError]=useState(''),[copied,setCopied]=useState(false);
- const close=()=>{setName('');if(location.hash.startsWith('#username='))history.replaceState(null,'',location.pathname+location.search)};
- useEffect(()=>{const event=(e:Event)=>{const n=(e as CustomEvent<string>).detail;if(typeof n==='string'&&/^[a-z][a-z0-9_]{3,23}$/.test(n))setName(n)};const hash=()=>{const n=location.hash.match(/^#username=([a-z][a-z0-9_]{3,23})$/)?.[1];if(n)setName(n)};hash();window.addEventListener('melo-collectible-name',event);window.addEventListener('hashchange',hash);return()=>{window.removeEventListener('melo-collectible-name',event);window.removeEventListener('hashchange',hash)}},[me]);
+ const previous=useRef(pageHash('chats'));const close=()=>{setName('');if(parseRoute(location.hash).kind==='username')writeHash(previous.current,true)};
+ useEffect(()=>{const event=(e:Event)=>{const n=(e as CustomEvent<string>).detail;if(typeof n!=='string'||!/^[a-z][a-z0-9_]{3,23}$/.test(n))return;if(parseRoute(location.hash).kind!=='username')previous.current=location.hash||pageHash('chats');writeHash(usernameHash(n));setName(n)};const hash=()=>{const r=parseRoute(location.hash);if(r.kind==='username')setName(r.username);else{previous.current=location.hash||pageHash('chats');setName('')}};hash();window.addEventListener('melo-collectible-name',event);window.addEventListener('hashchange',hash);window.addEventListener('popstate',hash);return()=>{window.removeEventListener('melo-collectible-name',event);window.removeEventListener('hashchange',hash);window.removeEventListener('popstate',hash)}},[me]);
  useEffect(()=>{let live=true;setEntry(null);setOwner(null);setError('');setCopied(false);if(!name||!db)return;setLoading(true);async function load(){const {data,error}=await db!.from('melo_premium_names').select('*').eq('username',name).maybeSingle();if(!live)return;if(error||!data?.assigned_to){setError(error?.message||'Коллекционное имя не найдено');setLoading(false);return}setEntry(data as PremiumName);const p=await db!.from('profiles').select('*').eq('id',data.assigned_to).maybeSingle();if(!live)return;if(p.error||!p.data)setError(p.error?.message||'Владелец не найден');else setOwner(p.data as Profile);setLoading(false)}load();return()=>{live=false}},[name]);
  useEffect(()=>{if(!name)return;const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.stopPropagation();close()}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key)},[name]);
- async function copy(){try{await navigator.clipboard.writeText(location.origin+import.meta.env.BASE_URL+'#username='+name);setCopied(true)}catch{setError('Не удалось скопировать ссылку')}}
+ async function copy(){try{await navigator.clipboard.writeText(location.origin+import.meta.env.BASE_URL+usernameHash(name));setCopied(true)}catch{setError('Не удалось скопировать ссылку')}}
  if(!name)return null;
  return createPortal(<motion.div className="melo-name-backdrop" initial={{opacity:0}} animate={{opacity:1}} onMouseDown={e=>{if(e.target===e.currentTarget)close()}}><motion.div className="melo-name-modal" role="dialog" aria-modal="true" aria-label="Коллекционное имя" initial={{opacity:0,scale:.92,y:16}} animate={{opacity:1,scale:1,y:0}} transition={{type:'spring',stiffness:300,damping:25}}><button type="button" className="dialog-close icon-button" title="Закрыть" onClick={close}><Icon name="close"/></button><div className="melo-name-symbol">@</div>{loading?<Loader/>:<><h2><span>@{name}</span> — коллекционное имя пользователя</h2>{owner&&<><p>Принадлежит</p><button className="melo-name-owner" onClick={()=>{close();onOpenProfile(owner)}}><Avatar name={displayName(owner)} path={owner.avatar_path} size={34}/><b>{displayName(owner)}</b><Icon name="chevron_right" size={18}/></button></>}{entry&&<div className="melo-name-acquisition"><p>{entry.acquisition==='gift'?'Выдано владельцем Melo':entry.acquisition==='purchase'?'Приобретено в Melo Collections':'Коллекционное имя закреплено за аккаунтом'}</p>{entry.acquired_at&&<p>{new Date(entry.acquired_at).toLocaleString('ru-RU')}</p>}{entry.acquisition==='purchase'&&entry.paid_price!==null&&<b><Icon name="stars" size={18}/> {entry.paid_price.toLocaleString('ru-RU')} баллов Melo</b>}</div>}{error&&<p role="alert">{error}</p>}{owner&&<Button className="primary full" onClick={()=>{close();onOpenProfile(owner)}}>{owner.id===me?'Мой профиль':'Открыть чат'}</Button>}{entry&&<Button icon="content_copy" className="tonal full" onClick={copy}>{copied?'Ссылка скопирована':'Копировать ссылку'}</Button>}<small>Коллекционные имена действуют внутри Melo.</small></>}</motion.div></motion.div>,document.body)
 }
@@ -637,7 +669,7 @@ function ManageChat({ chat, people, me, isAdmin, onRefresh, onClose, onLeave, on
   const peerId=chat.kind==='direct'?chat.peer?.id:undefined
   useEffect(()=>{let live=true;setIsBlocked(null);if(!db||!peerId)return;db.from('blocks').select('blocked_id').eq('blocker_id',me).eq('blocked_id',peerId).maybeSingle().then(({data,error})=>{if(!live)return;if(error)onError(error.message);else setIsBlocked(Boolean(data))});return()=>{live=false}},[me,peerId])
   async function toggleBlock(){if(!db||!peerId||isBlocked===null||blockBusy)return;const next=!isBlocked;setBlockBusy(true);try{const {error}=await db.rpc('set_melo_block',{target_id:peerId,make_blocked:next});if(error)throw error;setIsBlocked(next);onNotice(next?'Пользователь заблокирован':'Пользователь разблокирован');await onRefresh()}catch(e){onError(errorText(e))}finally{setBlockBusy(false)}}
-  const invite = `${window.location.origin}${import.meta.env.BASE_URL}#invite=${chat.invite_token}`
+  const invite = `${window.location.origin}${import.meta.env.BASE_URL}${inviteHash(chat.invite_token)}`
   return <div className="manage"><h2>{chat.kind === 'group' ? 'О группе' : 'О чате'}</h2><div className="manage-hero"><Avatar name={chat.kind === 'group' ? chat.name || 'Группа' : displayName(chat.peer)} path={chat.kind === 'group' ? chat.avatar_path : chat.peer?.avatar_path} group={chat.kind === 'group'} size={76}/><b>{chat.kind === 'group' ? chat.name : displayName(chat.peer)}{chat.kind==='direct'&&<><Verified profile={chat.peer}/><Awards profile={chat.peer}/></>}</b>{chat.kind==='group'?<small>{chat.members.length} участников</small>:chat.peer&&<UsernameList userId={chat.peer.id} primary={chat.peer.username}/>}</div>{chat.kind==='direct'&&chat.peer&&<PublicCollection userId={chat.peer.id}/>}
     {chat.kind === 'direct' && chat.peer ? <Button icon={isBlocked?'lock_open':'block'} className="tonal full" disabled={isBlocked===null||blockBusy} onClick={toggleBlock}>{isBlocked===null?'Проверяем блокировку…':isBlocked?'Разблокировать':'Заблокировать'}</Button> : <>
       {isAdmin && <><label>Название группы<input value={name} maxLength={80} onChange={e => setName(e.target.value)}/></label><label>Описание<textarea value={description} maxLength={500} onChange={e => setDescription(e.target.value)}/></label><Button className="tonal full" icon="save" onClick={() => mutate(() => db!.from('conversations').update({ name, description }).eq('id', chat.id), 'Группа обновлена')}>Сохранить</Button><label className="avatar-upload">Изменить аватар группы<input type="file" accept="image/*" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; try { const path = await uploadAvatar(me, f); const { error } = await db!.from('conversations').update({ avatar_path: path }).eq('id', chat.id); if (error) throw error; await onRefresh(); onNotice('Аватар группы обновлён') } catch (x) { onError(errorText(x)) } }}/></label><div className="toggle-row"><span><b>Пишут только администраторы</b></span><input type="checkbox" checked={chat.only_admins_can_post} onChange={e => mutate(() => db!.from('conversations').update({ only_admins_can_post: e.target.checked }).eq('id', chat.id), 'Разрешения обновлены')}/></div></>}
