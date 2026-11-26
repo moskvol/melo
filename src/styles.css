@@ -206,3 +206,30 @@ input[type=file][hidden]{display:none!important}
 .melo-badge-colors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .melo-badge-colors input[type=color]{width:100%;height:44px;padding:4px;border-radius:12px;cursor:pointer}
 .melo-badge-colors small{font-size:11px;color:var(--muted)}
+
+
+/* Channel discussion and reactions */
+.melo-channel-feed{align-items:flex-start;gap:12px}
+.melo-channel-feed .empty-conversation{align-self:center}
+.melo-channel-post{align-items:flex-start;width:100%;max-width:none;min-width:0}
+.melo-channel-post .date-chip{align-self:center}
+.melo-channel-post .bubble{width:fit-content;min-width:min(235px,100%);max-width:min(100%,560px);border-radius:24px 24px 24px 7px;background:var(--bubble);padding:13px 15px 0}
+.melo-channel-post .message-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.melo-post-reactions{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;align-items:center}
+.melo-post-reactions button{display:inline-flex;align-items:center;justify-content:center;gap:5px;border-radius:20px;min-height:31px;padding:4px 10px;background:var(--surface-high);color:var(--on-surface);font-size:15px;line-height:1.2;border:1px solid transparent}
+.melo-post-reactions button span:not(.material-symbols-rounded){font-size:12px;font-weight:650}
+.melo-post-reactions button.selected,.melo-post-emoji-picker button.selected{background:color-mix(in srgb,var(--accent) 23%,var(--surface));border-color:var(--accent);color:var(--accent)}
+.melo-post-reactions .melo-reaction-add{width:34px;padding:4px;color:var(--accent)}
+.melo-post-emoji-picker{display:flex;flex-wrap:wrap;gap:3px;padding:5px;margin-top:8px;background:var(--surface);border:1px solid var(--outline);border-radius:22px;transform-origin:left center}
+.melo-post-emoji-picker button{display:grid;place-items:center;min-width:34px;height:36px;border-radius:13px;background:transparent;font-size:21px;border:1px solid transparent}
+.melo-post-discuss{display:flex;align-items:center;gap:8px;width:calc(100% + 30px);margin:7px -15px 0;border-radius:0 0 24px 7px;border-top:1px solid color-mix(in srgb,var(--outline) 50%,transparent);padding:12px 15px;background:transparent;color:var(--accent);font-size:13px;text-align:left;font-weight:650}
+.melo-post-discuss span:not(.material-symbols-rounded){flex:1}
+.melo-post-discuss:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.melo-discussion-origin{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--outline);padding:10px 20px;background:var(--surface);color:var(--accent);flex:none}
+.melo-discussion-origin div{display:grid;gap:4px;min-width:0}
+.melo-discussion-origin span:not(.material-symbols-rounded){font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.melo-discussion-feed .message-meta button{background:transparent;color:inherit;padding:2px 6px}
+.melo-discussion-feed .bubble-mine .sender{color:inherit}
+.melo-discussion-feed .message-wrap{max-width:min(88%,650px)}
+.melo-discussion-feed>.button{align-self:center;margin-bottom:12px}
+@media(max-width:840px),(pointer:coarse) and (max-width:1100px){.melo-channel-post .bubble{max-width:min(94%,560px);border-radius:20px 20px 20px 6px}.melo-post-discuss{border-radius:0 0 20px 6px}.melo-post-emoji-picker button{min-width:31px;height:38px}.melo-discussion-origin{padding:10px 13px}}
