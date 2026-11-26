@@ -298,3 +298,25 @@ input[type=file][hidden]{display:none!important}
 .melo-name-acquisition{display:grid;gap:5px;padding:9px 0;color:var(--muted);max-width:100%}
 .melo-name-acquisition b{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--accent)}
 .melo-name-modal .full{width:100%}
+
+
+/* Dedicated primary navigation and full-width workspaces */
+.app-shell.melo-workspace-shell{grid-template-columns:84px minmax(0,1fr)}
+.melo-workspace{min-width:0;min-height:0;overflow:hidden}
+.rail nav{min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;align-content:start;flex:0 1 auto;gap:4px}
+.rail{gap:16px;min-height:0}.rail-item{min-height:53px;flex-shrink:0}.rail-item small{font-size:10px}
+.melo-admin-workspace{width:min(100%,760px);margin:0 auto;padding:24px clamp(14px,4vw,36px);flex:1;min-height:0;overflow:auto;align-self:stretch}
+.melo-admin-workspace>.sidebar-head{padding:10px 0 16px}
+.melo-admin-shortcuts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:10px;margin-bottom:12px}
+.melo-admin-shortcut{display:flex;align-items:center;text-align:left;gap:12px;padding:14px;border:1px solid color-mix(in srgb,var(--outline) 45%,transparent);border-radius:22px;background:var(--surface-container);color:var(--accent);min-width:0;transition:background .2s,transform .2s}
+.melo-admin-shortcut:active{transform:scale(.97)}.melo-admin-shortcut span:not(.material-symbols-rounded){display:grid;flex:1;min-width:0;gap:4px;color:var(--on-surface)}
+.melo-admin-shortcut small{font-size:11px;color:var(--muted)}
+.melo-workspace>.melo-market,.melo-workspace>.melo-stats{width:min(100%,1100px);margin:0 auto;align-self:stretch}
+@media(max-width:840px),(pointer:coarse) and (max-width:1100px){
+ .app-shell.melo-workspace-shell{display:block}
+ .conversation.melo-workspace{display:flex;height:calc(100dvh - 76px - env(safe-area-inset-bottom))}
+ .bottom-nav button{min-width:0;padding:0 1px;font-size:clamp(9px,2.4vw,11px);white-space:nowrap;overflow:hidden}
+ .bottom-nav button .material-symbols-rounded{width:min(100%,48px);height:31px;font-size:22px!important}
+ .bottom-nav button span:not(.material-symbols-rounded){max-width:100%;overflow:hidden;text-overflow:ellipsis}
+ .melo-admin-workspace{padding:14px}.melo-admin-shortcuts{grid-template-columns:1fr}
+}
