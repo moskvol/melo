@@ -74,7 +74,7 @@ function Auth({ onNotice, recovery = false, onRecoveryDone }: { onNotice: (s: st
         if (error) throw error
         setOtpCode(''); setMode('otp_verify'); onNotice('Код отправлен на почту')
       } else if (mode === 'otp_verify' || mode === 'signup_verify') {
-        const { error } = await db.auth.verifyOtp({ email: email.trim(), token: otpCode, type: 'email' })
+        const { error } = await db.auth.verifyOtp({ email: email.trim(), token: otpCode, type: mode === 'signup_verify' ? 'signup' : 'email' })
         if (error) throw error
       } else if (mode === 'reset') {
         const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: window.location.href.split('#')[0] })
