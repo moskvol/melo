@@ -338,3 +338,10 @@ input[type=file][hidden]{display:none!important}
 @keyframes melo-gift-float{0%,100%{translate:0 0}50%{translate:0 -7px}}@keyframes melo-gift-sparkle{0%,100%{opacity:.35;scale:.7}50%{opacity:1;scale:1.15}}
 @media(prefers-reduced-motion:reduce){.melo-gift-icon,.melo-gift-sparkle{animation:none}}
 @media(max-width:840px),(pointer:coarse) and (max-width:1100px){.melo-tool-card{padding:13px}.melo-sticker-picker{grid-template-columns:repeat(8,minmax(0,1fr))}.melo-sticker-picker button{font-size:23px;min-width:0}}
+
+
+/* Channel media and delegated editors */
+.melo-post-media{display:block;width:auto;max-width:100%;max-height:420px;object-fit:contain;border-radius:16px;margin:6px 0 10px;background:var(--surface-container)}
+.melo-channel-admins{width:100%;max-width:520px;flex-shrink:0;text-align:left}.melo-channel-info{align-items:center}
+.melo-channel-media-selection:empty{display:none}.melo-channel-media-selection{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;min-width:0;background:var(--surface);border-radius:16px;margin-bottom:6px;font-size:13px}.melo-channel-media-selection span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.melo-channel-media-selection button{background:transparent;color:var(--muted)}
