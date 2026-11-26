@@ -64,3 +64,109 @@ button{position:relative;overflow:hidden}button::after{content:'';position:absol
   .profile-settings{top:28px}
   .auth-card{align-self:center}
 }
+
+
+/* Melo Expressive — refined adaptive design system */
+:root{--melo-spring:cubic-bezier(.2,.8,.2,1.15);--melo-radius:28px;--melo-accent-tint:color-mix(in srgb,var(--accent) 15%,var(--surface));--melo-hairline:color-mix(in srgb,var(--outline) 32%,transparent)}
+html{scrollbar-color:var(--outline) transparent;scrollbar-width:thin}
+button,a,input,textarea,select{-webkit-tap-highlight-color:transparent}
+button:focus-visible,[tabindex]:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+input[type=file][hidden]{display:none!important}
+.app-shell{grid-template-columns:84px minmax(320px,382px) minmax(0,1fr);background:var(--surface-container)}
+.rail{padding:24px 8px;gap:26px;border-right:1px solid var(--melo-hairline)}
+.rail-logo{border-radius:19px 24px 19px 24px;box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 20%,transparent)}
+.rail-item{min-height:60px}.rail-item span{height:36px;width:56px;border-radius:20px}.rail-item.active span{border-radius:16px 24px 16px 24px;transition:border-radius .4s var(--melo-spring),background .25s}
+.sidebar{min-width:0;border-right:1px solid var(--melo-hairline)}
+.sidebar-head{padding:26px 22px 18px;flex-shrink:0}.sidebar-head h1{font-size:clamp(30px,3vw,40px);font-weight:780;letter-spacing:-.055em;line-height:1.04}
+.melo-heading-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.melo-profile-shortcut{padding:0;border-radius:20px;background:none;flex:none;transition:transform .28s var(--melo-spring)}
+.melo-profile-shortcut:active{transform:scale(.88)}
+.searchbox{margin:0 16px 14px;min-height:50px;flex:none;border:1px solid transparent;border-radius:26px;transition:border .2s,background .2s}
+.searchbox:focus-within{border-color:var(--accent);background:var(--surface)}
+.melo-community-link{margin:0 16px 12px;flex:none}
+.melo-community-link button{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:26px;text-align:left;background:var(--melo-accent-tint);color:var(--on-surface)}
+.melo-community-icon{display:grid;place-items:center;width:44px;height:44px;flex:none;background:var(--accent);color:white;border-radius:16px 23px 16px 23px}
+.melo-community-link button>span:nth-child(2){flex:1;display:grid;gap:3px}.melo-community-link small{font-size:12px;color:var(--muted)}
+.melo-folder-tabs{display:flex;align-items:center;gap:7px;overflow-x:auto;flex:none;padding:2px 16px 12px;scrollbar-width:none}.melo-folder-tabs::-webkit-scrollbar{display:none}
+.melo-folder-tabs button{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex:none;min-height:38px;border-radius:16px;padding:0 16px;border:1px solid var(--melo-hairline);color:var(--on-surface);background:var(--surface);font-size:13px;font-weight:650;transition:background .22s,border-radius .35s var(--melo-spring)}
+.melo-folder-tabs button.selected{border-color:transparent;background:var(--melo-accent-tint);color:var(--on-surface);border-radius:22px}
+.list-title{margin:5px 24px 8px;font-size:12px;letter-spacing:.02em;flex:none;color:var(--muted)}
+.chat-list,.people-list{padding:0 12px 110px;overscroll-behavior:contain}
+.chat-row,.person-row{padding:12px 10px;min-height:68px;border-radius:20px;margin-bottom:3px;transition:background .2s,transform .28s var(--melo-spring),border-radius .28s}
+.chat-row.selected{border-radius:26px 18px 26px 18px;background:var(--melo-accent-tint)}
+.chat-row-top b,.conversation-title b{display:flex;align-items:center;gap:1px;min-width:0;overflow:hidden}
+.melo-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.chat-row-top b>[role=button],.conversation-title b>[role=button],.people-list .person-row b [role=button],.member-row b [role=button]{display:inline-flex!important;flex:none!important;align-items:center}
+.people-list .person-row>span:not(.material-symbols-rounded){min-width:0}
+.people-list .person-row>span b{display:flex;align-items:center;flex-wrap:wrap;gap:1px}
+.chat-row-bottom em{font-weight:750;min-width:24px;height:24px}
+.empty-list{padding:38px 12px 24px;gap:10px}.empty-list .empty-orb{width:72px;height:72px;border-radius:28px 36px 28px 36px}.empty-list p{max-width:230px;line-height:1.5}.empty-list .button{margin-top:5px}
+.fab{right:18px;bottom:20px;border-radius:22px 30px 22px 30px;min-height:58px;padding:14px 20px;box-shadow:0 8px 26px color-mix(in srgb,var(--accent) 27%,transparent);transition:border-radius .4s var(--melo-spring)}
+.conversation{background:var(--surface-low);min-width:0}
+.conversation-head{height:76px;padding:0 20px;gap:12px;border-bottom:1px solid var(--melo-hairline)}
+.conversation-title b{font-size:17px}.conversation-title small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.conversation-head .icon-button{width:42px;height:42px;border-radius:16px}
+.messages{background-image:radial-gradient(color-mix(in srgb,var(--accent) 7%,transparent) 1px,transparent 1px);background-size:22px 22px;overscroll-behavior:contain;display:flex;flex-direction:column;gap:0;scroll-padding-bottom:16px}
+.message-line{width:100%;margin-bottom:10px}.date-chip{background:var(--surface-high);padding:7px 14px;font-weight:650;letter-spacing:.01em}
+.bubble{padding:10px 13px 8px;border-radius:24px 24px 24px 7px;box-shadow:0 1px 2px #0000000a;overflow-wrap:anywhere;word-break:normal}
+.bubble-mine{border-radius:24px 24px 7px 24px;background:var(--accent);color:#fff}
+.message-meta{font-size:11px;gap:4px;opacity:.8}.chat-image,.chat-video{max-width:min(100%,360px);height:auto}.chat-image{max-height:360px}.chat-video{max-height:360px}
+.melo-message-more{display:none}
+.message-actions{border:1px solid var(--melo-hairline);border-radius:20px;box-shadow:0 5px 20px #0002}
+.message-line.menu-open .message-actions,.message-line.menu-open .emoji-menu{display:flex}
+.reactions{flex-wrap:wrap}.reactions button{min-height:28px;padding:4px 8px}
+.composer-area{padding:10px max(22px,6%) 10px;border-top:1px solid var(--melo-hairline)}
+.composer{gap:7px;padding:7px 8px 7px 10px;min-height:58px;border:1px solid var(--melo-hairline);border-radius:30px}
+.composer:focus-within{border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+.composer button{width:42px;height:42px;align-self:flex-end}.composer textarea{font-size:16px;min-width:0;min-height:42px;align-self:center}
+.composer .send{width:44px;height:44px;border-radius:18px;display:grid;place-items:center;transition:border-radius .35s var(--melo-spring),background .2s}
+.composer .send span{display:grid;place-items:center}.composer .send.recording{background:#b3261e;color:white;border-radius:50%}
+.melo-recording{display:flex;align-items:center;gap:8px;color:var(--danger);min-width:0;flex:1;font-size:13px;font-weight:700;align-self:center}.melo-recording .loader{height:28px;gap:3px;flex:none}.melo-recording .loader i{width:3px;background:var(--danger)}
+.welcome-logo{border-radius:46px 58px 46px 58px;transform:rotate(-7deg);box-shadow:16px 20px 0 var(--melo-accent-tint)}.welcome h2{font-size:clamp(28px,4vw,40px);line-height:1.12;max-width:400px}.welcome p{max-width:330px}
+.panel-scroll{padding:0 20px 32px;min-height:0;overscroll-behavior:contain}.panel-scroll .sidebar-head{padding-left:0;padding-right:0}
+.profile-section{padding:0 0 24px;overflow:auto;overscroll-behavior:contain}.profile-section .panel-scroll{padding-bottom:10px}.profile-form{padding:0;gap:18px}
+.melo-banner{min-height:155px;margin-bottom:0;border-radius:30px 30px 20px 20px}
+.melo-frame-select{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px 0 6px;color:var(--muted);font-size:13px;font-weight:650}
+.melo-frame-select select{max-width:54%;padding:8px 10px}
+.profile-photo{margin:16px auto 10px}.melo-profile-name{text-align:center;font-weight:770;font-size:23px;letter-spacing:-.03em;overflow-wrap:anywhere}
+.profile-handle{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:2px;margin:7px 0 22px;font-size:14px}
+.profile-form>label,.dialog-form>label{font-weight:650;gap:7px}.profile-form input:not([type=checkbox]),.profile-form textarea{border:1px solid var(--melo-hairline);border-radius:18px;min-height:48px}
+.profile-form input:focus,.profile-form textarea:focus{border-color:var(--accent)}
+.input-prefix{border:1px solid var(--melo-hairline)}.input-prefix input{border:0!important}
+.toggle-row{min-height:53px;padding:10px 12px;border-radius:18px;background:var(--surface-container)}
+.melo-admin-entry{padding:4px 20px 18px}
+.melo-panel>.button:first-child{margin:18px 0 0;padding-left:9px}
+.melo-admin .person-row{background:var(--surface-container);margin:18px 0;border-radius:26px;padding:15px}
+.melo-admin>.button:not(:first-child){margin:7px 0;width:100%;background:var(--melo-accent-tint)}
+.melo-admin>label{display:grid;gap:10px;margin:16px 0;font-size:14px;font-weight:650}
+.melo-community>h3,.settings h3{margin:20px 0 10px;font-size:17px;letter-spacing:-.02em}
+.melo-community>input,.melo-community>textarea{margin:8px 0}
+.melo-community .melo-social-card{background:var(--surface-container);border-color:var(--melo-hairline)}
+.melo-community .melo-stories .melo-social-card{background:var(--melo-accent-tint);min-height:140px}
+.melo-community .melo-social-card p{white-space:pre-wrap;overflow-wrap:anywhere}
+.melo-community .person-row{background:var(--surface-container);margin:8px 0}
+.melo-panel>p[role=status]{padding:12px;border-radius:16px;background:var(--surface-container)}
+.settings .swatches{flex-wrap:wrap;gap:12px}.settings .swatches button{height:40px;width:40px}.settings .segmented{background:var(--surface-container);border-color:var(--melo-hairline)}.settings .segmented button{min-height:40px}
+.auth-page{grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:100dvh}
+.auth-art{background:linear-gradient(145deg,#e5dff9 0%,#d1c7f1 60%,#c6dce9 100%);border-radius:0 48px 48px 0}
+.auth-art h1{font-size:clamp(52px,6.6vw,102px)}
+.auth-card{max-width:440px;padding:32px 12px}.auth-card h2{font-weight:780}
+.auth-form input{border:1px solid var(--melo-hairline);font-size:16px;border-radius:19px}
+.auth-form input:focus{border-color:var(--accent)}
+.auth-links button:disabled{opacity:.65}.error{color:#8d201b;background:#ffdad6;overflow-wrap:anywhere}
+.dialog{border:1px solid var(--melo-hairline);max-height:85dvh;border-radius:32px;box-shadow:0 12px 50px #0003}
+@media (hover:none){.message-actions,.message-line:hover .message-actions,.message-line:focus-within .message-actions,.emoji-menu,.message-line:hover .emoji-menu,.message-line:focus-within .emoji-menu{display:none}.message-line.menu-open .message-actions,.message-line.menu-open .emoji-menu{display:flex}.melo-message-more{display:inline-grid;place-items:center;background:transparent;color:inherit;width:26px;height:24px;position:absolute;top:3px;right:4px;opacity:.7}.bubble{padding-right:29px}.message-line.menu-open .message-actions{position:static;flex-wrap:wrap;margin:8px 0 0;border:0;box-shadow:none;background:transparent}.message-line.menu-open .message-actions button{width:34px;height:34px}.message-line.menu-open .emoji-menu{flex-wrap:wrap}}
+@media(max-width:840px),(pointer:coarse) and (max-width:1100px){
+ .auth-page{grid-template-columns:minmax(0,1fr);align-content:center;min-height:100dvh}.auth-art{display:none}.auth-card{width:min(440px,calc(100% - 40px));padding:36px 0}.auth-card h2{font-size:clamp(31px,8vw,40px)}.mobile-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;font-size:23px;color:var(--accent)}
+ .app-shell{display:block}.rail{display:none}.sidebar{height:calc(100dvh - 76px - env(safe-area-inset-bottom));border:0}.sidebar.mobile-hidden{display:none}.conversation{display:none;height:100dvh}.conversation.mobile-open{display:flex}.mobile-back{display:grid}
+ .sidebar-head{padding:22px 18px 14px}.sidebar-head h1{font-size:36px}.searchbox{margin:0 14px 12px}.melo-community-link{margin:0 14px 10px}.melo-folder-tabs{padding-inline:14px}.chat-list,.people-list{padding-inline:8px}.chat-row{min-height:70px}
+ .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:5;height:calc(76px + env(safe-area-inset-bottom));padding:8px 4px calc(5px + env(safe-area-inset-bottom));background:var(--surface-container);border-top:1px solid var(--melo-hairline);justify-content:space-around;gap:1px}
+ .bottom-nav button{flex:1;display:grid;justify-items:center;align-content:center;gap:4px;min-width:0;color:var(--muted);font-size:11px;font-weight:700;background:transparent}.bottom-nav button .material-symbols-rounded{width:58px;height:32px;border-radius:18px;transition:background .2s,border-radius .35s var(--melo-spring)}.bottom-nav button.active{color:var(--accent)}.bottom-nav button.active .material-symbols-rounded{background:var(--melo-accent-tint);border-radius:14px 22px 14px 22px}.mobile-open~.bottom-nav{display:none}
+ .conversation-head{height:64px;gap:5px;padding:0 7px}.conversation-head .icon-button{width:38px;height:42px}.conversation-head .avatar{width:40px!important;height:40px!important}.conversation-title b{font-size:15px}.conversation-title small{font-size:11px}
+ .messages{padding:16px 10px}.message-wrap{max-width:88%}.composer-area{padding:8px 8px calc(8px + env(safe-area-inset-bottom))}.composer{gap:4px;padding:5px 6px;min-height:54px}.composer button{width:36px;height:40px}.composer .send{width:43px;height:43px}.composer-hint{display:none}
+ .fab{bottom:16px;right:14px}.toast{bottom:calc(86px + env(safe-area-inset-bottom));right:10px;max-width:calc(100% - 20px)}.mobile-open~.toast{bottom:20px}
+ .dialog-backdrop{align-items:end;padding:0}.dialog{width:100%;max-height:86dvh;border-radius:30px 30px 0 0;padding:26px 20px calc(24px + env(safe-area-inset-bottom))}.dialog-close{right:12px;top:12px}
+ .panel-scroll{padding-inline:16px}.profile-settings{top:22px;right:14px}.melo-admin-entry{padding-inline:16px}
+}
+@media(max-width:360px){.conversation-head{gap:3px}.conversation-head .icon-button{width:32px}.composer button{width:32px}.composer .send{width:40px}.sidebar-head h1{font-size:32px}.bottom-nav button .material-symbols-rounded{width:48px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
