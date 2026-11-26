@@ -1,6 +1,6 @@
-export type Page = 'chats' | 'contacts' | 'search' | 'profile' | 'settings' | 'admin' | 'community' | 'stats' | 'market' | 'gifts' | 'marketAdmin'
+export type Page = 'chats' | 'contacts' | 'search' | 'profile' | 'settings' | 'admin' | 'community' | 'stats' | 'market' | 'gifts' | 'marketAdmin' | 'studio' | 'bots' | 'apps'
 export type MeloRoute = {kind:'page';page:Page}|{kind:'chat';id:string}|{kind:'channel';username:string}|{kind:'username';username:string}|{kind:'invite';token:string}|{kind:'auth'}|{kind:'unknown'}
-const pages:Record<Page,string>={chats:'chats',contacts:'contacts',search:'search',profile:'profile',settings:'settings',admin:'admin',community:'community',stats:'admin/stats',market:'market',gifts:'gifts',marketAdmin:'admin/market'}
+const pages:Record<Page,string>={chats:'chats',contacts:'contacts',search:'search',profile:'profile',settings:'settings',admin:'admin',community:'community',stats:'admin/stats',market:'market',gifts:'gifts',marketAdmin:'admin/market',studio:'studio',bots:'bots',apps:'apps'}
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const handle=/^[a-z][a-z0-9_]{3,31}$/
 export const pageHash=(page:Page)=>'#/'+pages[page]
