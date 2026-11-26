@@ -277,3 +277,24 @@ input[type=file][hidden]{display:none!important}
 .melo-market label{display:grid;gap:6px;font-size:13px}.melo-market input[type=color]{height:46px;width:100%;padding:5px;cursor:pointer}
 .melo-public-collection{margin:12px 0}.melo-public-collection .melo-items-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.melo-public-collection .melo-item-art{height:90px}
 @media(max-width:840px),(pointer:coarse) and (max-width:1100px){.melo-items-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.melo-item-art{height:100px}.melo-market .melo-stats-chart{padding:12px}}
+
+
+/* Collectible username aliases and ownership card */
+.melo-usernames{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:14px;line-height:1.55}
+.melo-username-link{display:inline;padding:0;border:0;background:transparent;color:var(--accent);font:inherit;cursor:pointer;overflow-wrap:anywhere;white-space:normal;text-align:left}
+.melo-username-link:hover,.melo-username-link:focus-visible{text-decoration:underline}
+.melo-username-primary{color:var(--accent);overflow-wrap:anywhere}
+.melo-username-extra{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.profile-handle .melo-usernames{display:inline-flex;text-align:center;max-width:100%}
+.melo-name-backdrop{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;background:#0008;padding:16px;backdrop-filter:blur(4px)}
+.melo-name-modal{position:relative;width:min(100%,390px);max-height:calc(100dvh - 32px);overflow:auto;border-radius:28px;background:var(--surface);padding:30px 24px 24px;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center;box-shadow:0 12px 50px #0005}
+.melo-name-modal h2{font-size:19px;line-height:1.4;margin:0;overflow-wrap:anywhere;max-width:100%}
+.melo-name-modal h2 span{color:var(--accent)}
+.melo-name-modal p{font-size:14px;margin:0;line-height:1.5}
+.melo-name-modal small{font-size:11px;color:var(--muted)}
+.melo-name-symbol{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;font-size:50px;font-weight:750;color:#fff;background:var(--accent);margin-bottom:4px}
+.melo-name-owner{display:flex;align-items:center;gap:8px;background:var(--surface-high);color:var(--on-surface);border-radius:100px;padding:4px 12px 4px 4px;max-width:100%;font-size:13px}
+.melo-name-owner b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.melo-name-acquisition{display:grid;gap:5px;padding:9px 0;color:var(--muted);max-width:100%}
+.melo-name-acquisition b{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--accent)}
+.melo-name-modal .full{width:100%}
