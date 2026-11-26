@@ -370,3 +370,5 @@ input[type=file][hidden]{display:none!important}
 .melo-item-card .melo-tool-button,.melo-items-grid>div>.melo-tool-button{font-size:11px;padding:8px 10px;width:100%;margin-top:5px}
 .melo-tool-card audio{max-width:100%}.melo-tool-card input[type=checkbox]{width:auto;justify-self:start}
 :root[data-wall=aurora] .messages{background:radial-gradient(ellipse at 10% 10%,#7255bb38,transparent 55%),radial-gradient(ellipse at 95% 80%,#3987a52d,transparent 60%),var(--surface)}
+
+.melo-frame-aurora{padding:5px;border-radius:50%;background:conic-gradient(#56c9b0,#6750a4,#c991e8,#56c9b0);box-shadow:0 0 16px #72c4b955;animation:melo-frame-glow 3s ease-in-out infinite}.melo-frame-prism{padding:5px;border-radius:50%;background:conic-gradient(#ffc56e,#ff80b5,#9d8aff,#7bdbe7,#ffc56e);box-shadow:0 0 16px #ab82ff66;animation:melo-frame-glow 2.4s ease-in-out infinite}@keyframes melo-frame-glow{50%{filter:saturate(1.45);box-shadow:0 0 23px #9d8aff99}}@media(prefers-reduced-motion:reduce){.melo-frame-aurora,.melo-frame-prism{animation:none}}
