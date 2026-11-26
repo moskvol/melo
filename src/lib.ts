@@ -78,15 +78,17 @@ export async function loadReactions(ids: string[]): Promise<Reaction[]> {
 
 export async function searchProfiles(term: string): Promise<Profile[]> {
   if (!db || !term.trim()) return []
-  const q = term.replace(/^@/, '').trim().replace(/[%_\\]/g, '')
+  const q = term.replace(/^@/, '').trim().slice(0,100)
   if (!q) return []
-  const [a,b,c] = await Promise.all([
-    db.from('profiles').select('*').ilike('username', `%${q}%`).limit(20),
-    db.from('profiles').select('*').ilike('first_name', `%${q}%`).limit(20),
-    db.from('profiles').select('*').ilike('last_name', `%${q}%`).limit(20)
+  const safe=q.replace(/[%_\\]/g,c=>String.fromCharCode(92)+c)
+  const [a,b,c,d] = await Promise.all([
+    db.from('profiles').select('*').ilike('username', `%${safe}%`).limit(20),
+    db.from('profiles').select('*').ilike('first_name', `%${safe}%`).limit(20),
+    db.from('profiles').select('*').ilike('last_name', `%${safe}%`).limit(20),
+    db.rpc('melo_search_aliases',{term:q})
   ])
-  for (const x of [a,b,c]) if (x.error) throw x.error
-  return [...new Map([...a.data!, ...b.data!, ...c.data!].map(p => [p.id as string, p as Profile])).values()]
+  for (const x of [a,b,c,d]) if (x.error) throw x.error
+  return [...new Map([...(a.data||[]), ...(d.data||[]), ...(b.data||[]), ...(c.data||[])].map(p => [p.id as string, p as Profile])).values()]
 }
 
 export async function uploadAvatar(userId: string, file: File) {
