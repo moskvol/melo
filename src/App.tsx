@@ -58,6 +58,8 @@ function Auth({ onNotice, recovery = false, onRecoveryDone }: { onNotice: (s: st
   const [name, setName] = useState('')
   const [otpCode, setOtpCode] = useState('')
   const [busy, setBusy] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
+  useEffect(() => { if (resendCooldown <= 0) return; const timer = setTimeout(() => setResendCooldown(value => Math.max(0, value - 1)), 1000); return () => clearTimeout(timer) }, [resendCooldown])
   const [error, setError] = useState('')
   async function submit(e: FormEvent) {
     e.preventDefault(); if (!db) return
@@ -66,13 +68,13 @@ function Auth({ onNotice, recovery = false, onRecoveryDone }: { onNotice: (s: st
       if (mode === 'register') {
         const { data, error } = await db.auth.signUp({ email, password, options: { data: { first_name: name }, emailRedirectTo: window.location.href.split('#')[0] } })
         if (error) throw error
-        if (!data.session) { setOtpCode(''); setPassword(''); setMode('signup_verify'); onNotice('Код подтверждения отправлен на почту') }
+        if (!data.session) { setOtpCode(''); setPassword(''); setMode('signup_verify'); setResendCooldown(30); onNotice('Код подтверждения отправлен на почту') }
       } else if (mode === 'login') {
         const { error } = await db.auth.signInWithPassword({ email, password }); if (error) throw error
       } else if (mode === 'otp') {
         const { error } = await db.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } })
         if (error) throw error
-        setOtpCode(''); setMode('otp_verify'); onNotice('Код отправлен на почту')
+        setOtpCode(''); setMode('otp_verify'); setResendCooldown(30); onNotice('Код отправлен на почту')
       } else if (mode === 'otp_verify' || mode === 'signup_verify') {
         const { error } = await db.auth.verifyOtp({ email: email.trim(), token: otpCode, type: mode === 'signup_verify' ? 'signup' : 'email' })
         if (error) throw error
@@ -88,12 +90,12 @@ function Auth({ onNotice, recovery = false, onRecoveryDone }: { onNotice: (s: st
   }
   const verifying = mode === 'otp_verify' || mode === 'signup_verify'
   async function resendCode() {
-    if (!db || busy || !verifying) return
+    if (!db || busy || !verifying || resendCooldown > 0) return
     setBusy(true); setError('')
     try {
       const result = mode === 'signup_verify' ? await db.auth.resend({ type: 'signup', email: email.trim() }) : await db.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } })
       if (result.error) throw result.error
-      setOtpCode(''); onNotice('Новый код отправлен на почту')
+      setOtpCode(''); setResendCooldown(30); onNotice('Новый код отправлен на почту')
     } catch (x) { setError(errorText(x)) } finally { setBusy(false) }
   }
   return <div className="auth-page"><div className="auth-art"><div className="brand-mark"><Icon name="chat_bubble" size={32} filled /></div><h1>Ближе,<br/>чем кажется.</h1><p>Добро пожаловать в Melo. Место для разговоров, которые важны.</p><div className="art-bubbles"><span>Привет! 👋</span><span>Как твой день?</span><span>Лучше, когда мы на связи 💜</span></div></div>
@@ -109,7 +111,7 @@ function Auth({ onNotice, recovery = false, onRecoveryDone }: { onNotice: (s: st
         {error && <div className="error" role="alert">{error}</div>}
         <Button type="submit" className="primary full" disabled={busy}>{busy ? 'Подождите…' : mode === 'register' ? 'Создать аккаунт' : mode === 'reset' ? 'Отправить ссылку' : mode === 'update' ? 'Сохранить пароль' : mode === 'otp' ? 'Отправить код' : verifying ? 'Подтвердить код' : 'Войти'}<Icon name="arrow_forward" /></Button>
       </form>
-      <div className="auth-links">{verifying && <button disabled={busy} onClick={resendCode}>Отправить код повторно</button>}{mode === 'login' ? <><button onClick={() => setMode('otp')}>Войти по коду из письма</button><button onClick={() => setMode('reset')}>Забыли пароль?</button><span>Нет аккаунта? <button onClick={() => setMode('register')}>Регистрация</button></span></> : <button onClick={() => { setError(''); setMode('login') }}>Вернуться ко входу</button>}</div>
+      <div className="auth-links">{verifying && <button disabled={busy || resendCooldown > 0} onClick={resendCode}>{resendCooldown > 0 ? `Отправить код повторно через ${resendCooldown} сек.` : 'Отправить код повторно'}</button>}{mode === 'login' ? <><button onClick={() => setMode('otp')}>Войти по коду из письма</button><button onClick={() => setMode('reset')}>Забыли пароль?</button><span>Нет аккаунта? <button onClick={() => setMode('register')}>Регистрация</button></span></> : <button onClick={() => { setError(''); setMode('login') }}>Вернуться ко входу</button>}</div>
     </motion.div>
   </div>
 }
