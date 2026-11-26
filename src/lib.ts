@@ -19,7 +19,7 @@ export type Message = {
   id: string; conversation_id: string; sender_id: string; body: string; kind: 'text' | 'image' | 'video' | 'file' | 'voice';
   attachment_path: string | null; attachment_name: string | null; attachment_mime: string | null;
   reply_to_id: string | null; forwarded_from_id: string | null; pinned: boolean;
-  edited_at: string | null; deleted_at: string | null; created_at: string
+  edited_at: string | null; deleted_at: string | null; created_at: string; poll_options?:string[]|null
 }
 export type Reaction = { message_id: string; user_id: string; emoji: string }
 export type Chat = Conversation & { members: Member[]; peer?: Profile; last?: Message; unread: number }
