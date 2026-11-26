@@ -257,3 +257,23 @@ input[type=file][hidden]{display:none!important}
 .melo-stats-pagination{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
 .melo-stats-chart .searchbox{margin:0}
 @media(max-width:840px),(pointer:coarse) and (max-width:1100px){.melo-stats{padding:12px;gap:12px}.melo-stats-hero{padding:18px;border-radius:24px}.melo-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.melo-stat-tile{padding:12px;border-radius:19px}.melo-stats-chart{padding:12px}.melo-chart-bars{gap:2px;height:120px}.melo-stats h2{font-size:19px}}
+
+
+/* Melo Collections */
+.melo-market{flex:1;min-height:0;min-width:0;overflow:auto;display:flex;flex-direction:column;gap:15px;padding:clamp(12px,3vw,30px)}
+.melo-market h2,.melo-market h3,.melo-market p{margin:0}.melo-market h2{font-size:21px}
+.melo-market .melo-folder-tabs{margin:0;padding:0;flex:none}
+.melo-credit-balance{display:flex;align-items:center;gap:8px;font-size:15px}.melo-credit-balance strong{font-size:28px;font-variant-numeric:tabular-nums}
+.melo-items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr));gap:10px}
+.melo-item-card{display:flex;flex-direction:column;gap:6px;min-width:0;border:1px solid color-mix(in srgb,var(--outline) 45%,transparent);border-radius:24px;padding:9px;background:var(--surface);overflow:hidden}
+.melo-item-art{height:122px;display:grid;place-items:center;border-radius:17px;isolation:isolate;position:relative;overflow:hidden}
+.melo-item-art:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 20%,#fff5,transparent 45%),repeating-linear-gradient(45deg,transparent 0 18px,#fff1 18px 20px);z-index:-1}
+.melo-item-art .material-symbols-rounded{filter:drop-shadow(0 5px 5px #0003);text-shadow:0 1px 2px #fff7}
+.melo-item-card small{font-size:10px;color:var(--muted)}.melo-item-card b{font-size:15px;overflow-wrap:anywhere}.melo-item-card>span{font-size:12px;color:var(--accent);font-weight:650}.melo-item-card p{font-size:12px;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.melo-market-preview{max-width:210px;width:100%;margin:auto}
+.melo-name-card{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface);padding:13px;border-radius:19px;border:1px solid color-mix(in srgb,var(--outline) 40%,transparent)}
+.melo-name-card>div{display:grid;gap:5px;min-width:0}.melo-name-card b{overflow-wrap:anywhere}.melo-name-card small{color:var(--muted);font-size:12px}
+.melo-market-status{padding:10px 14px;border:1px solid var(--outline);border-radius:16px;background:var(--surface-high);overflow-wrap:anywhere}
+.melo-market label{display:grid;gap:6px;font-size:13px}.melo-market input[type=color]{height:46px;width:100%;padding:5px;cursor:pointer}
+.melo-public-collection{margin:12px 0}.melo-public-collection .melo-items-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.melo-public-collection .melo-item-art{height:90px}
+@media(max-width:840px),(pointer:coarse) and (max-width:1100px){.melo-items-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.melo-item-art{height:100px}.melo-market .melo-stats-chart{padding:12px}}
