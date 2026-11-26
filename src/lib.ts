@@ -12,14 +12,14 @@ export type Profile = {
 export type Conversation = {
   id: string; kind: 'direct' | 'group'; name: string | null; description: string | null;
   avatar_path: string | null; invite_token: string; owner_id: string | null;
-  only_admins_can_post: boolean; updated_at: string
+  only_admins_can_post: boolean; updated_at: string; auto_delete_seconds?: number
 }
 export type Member = { conversation_id: string; user_id: string; role: 'owner' | 'admin' | 'member'; last_read_at: string }
 export type Message = {
   id: string; conversation_id: string; sender_id: string; body: string; kind: 'text' | 'image' | 'video' | 'file' | 'voice';
   attachment_path: string | null; attachment_name: string | null; attachment_mime: string | null;
   reply_to_id: string | null; forwarded_from_id: string | null; pinned: boolean;
-  edited_at: string | null; deleted_at: string | null; created_at: string; poll_options?:string[]|null
+  edited_at: string | null; deleted_at: string | null; created_at: string; poll_options?:string[]|null; expires_at?:string|null
 }
 export type Reaction = { message_id: string; user_id: string; emoji: string }
 export type Chat = Conversation & { members: Member[]; peer?: Profile; last?: Message; unread: number }
