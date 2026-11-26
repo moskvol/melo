@@ -6,7 +6,7 @@ import { avatarUrl, configured, date, db, displayName, errorText, initials, load
 import type { Chat, Message, Profile, Reaction } from './lib'
 
 type Page = 'chats' | 'contacts' | 'search' | 'profile' | 'settings'
-type AuthMode = 'login' | 'register' | 'reset' | 'update' | 'otp' | 'otp_verify'
+type AuthMode = 'login' | 'register' | 'reset' | 'update' | 'otp' | 'otp_verify' | 'signup_verify'
 type Dialog = 'new' | 'group' | 'manage' | 'forward' | 'deleteAccount' | null
 const accents = ['#6558b8', '#276d84', '#9b466d', '#437549', '#a45f22']
 
@@ -39,14 +39,14 @@ function Auth({ onNotice, recovery = false, onRecoveryDone }: { onNotice: (s: st
       if (mode === 'register') {
         const { data, error } = await db.auth.signUp({ email, password, options: { data: { first_name: name }, emailRedirectTo: window.location.href.split('#')[0] } })
         if (error) throw error
-        if (!data.session) { onNotice('Проверьте почту и подтвердите адрес'); setMode('login') }
+        if (!data.session) { setOtpCode(''); setPassword(''); setMode('signup_verify'); onNotice('Код подтверждения отправлен на почту') }
       } else if (mode === 'login') {
         const { error } = await db.auth.signInWithPassword({ email, password }); if (error) throw error
       } else if (mode === 'otp') {
         const { error } = await db.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } })
         if (error) throw error
         setOtpCode(''); setMode('otp_verify'); onNotice('Код отправлен на почту')
-      } else if (mode === 'otp_verify') {
+      } else if (mode === 'otp_verify' || mode === 'signup_verify') {
         const { error } = await db.auth.verifyOtp({ email: email.trim(), token: otpCode, type: 'email' })
         if (error) throw error
       } else if (mode === 'reset') {
@@ -59,20 +59,30 @@ function Auth({ onNotice, recovery = false, onRecoveryDone }: { onNotice: (s: st
       }
     } catch (x) { setError(errorText(x)) } finally { setBusy(false) }
   }
+  const verifying = mode === 'otp_verify' || mode === 'signup_verify'
+  async function resendCode() {
+    if (!db || busy || !verifying) return
+    setBusy(true); setError('')
+    try {
+      const result = mode === 'signup_verify' ? await db.auth.resend({ type: 'signup', email: email.trim() }) : await db.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } })
+      if (result.error) throw result.error
+      setOtpCode(''); onNotice('Новый код отправлен на почту')
+    } catch (x) { setError(errorText(x)) } finally { setBusy(false) }
+  }
   return <div className="auth-page"><div className="auth-art"><div className="brand-mark"><Icon name="chat_bubble" size={32} filled /></div><h1>Ближе,<br/>чем кажется.</h1><p>Добро пожаловать в Melo. Место для разговоров, которые важны.</p><div className="art-bubbles"><span>Привет! 👋</span><span>Как твой день?</span><span>Лучше, когда мы на связи 💜</span></div></div>
     <motion.div className="auth-card" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 210, damping: 22 }}>
       <div className="mobile-logo"><div className="brand-mark"><Icon name="chat_bubble" size={28} filled /></div><b>Melo</b></div>
-      <h2>{mode === 'register' ? 'Создать аккаунт' : mode === 'reset' ? 'Восстановить пароль' : mode === 'update' ? 'Новый пароль' : mode === 'otp' ? 'Вход по коду' : mode === 'otp_verify' ? 'Введите код' : 'С возвращением'}</h2>
-      <p className="muted">{mode === 'register' ? 'Начните общение за пару минут' : mode === 'reset' ? 'Отправим ссылку на вашу почту' : mode === 'update' ? 'Придумайте новый надёжный пароль' : mode === 'otp' ? 'Пришлём одноразовый код на вашу почту' : mode === 'otp_verify' ? `Шестизначный код отправлен на ${email}` : 'Продолжим с того места, где остановились'}</p>
+      <h2>{mode === 'register' ? 'Создать аккаунт' : mode === 'reset' ? 'Восстановить пароль' : mode === 'update' ? 'Новый пароль' : mode === 'otp' ? 'Вход по коду' : verifying ? 'Введите код' : 'С возвращением'}</h2>
+      <p className="muted">{mode === 'register' ? 'Начните общение за пару минут' : mode === 'reset' ? 'Отправим ссылку на вашу почту' : mode === 'update' ? 'Придумайте новый надёжный пароль' : mode === 'otp' ? 'Пришлём одноразовый код на вашу почту' : verifying ? `Введите код из письма, отправленного на ${email}` : 'Продолжим с того места, где остановились'}</p>
       <form onSubmit={submit} className="auth-form">
         {mode === 'register' && <label>Имя<input required maxLength={50} value={name} onChange={e => setName(e.target.value)} placeholder="Как к вам обращаться" /></label>}
-        {mode !== 'update' && mode !== 'otp_verify' && <label>Электронная почта<input required type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></label>}
-        {mode === 'otp_verify' && <label>Код из письма<input required type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))} placeholder="000000" /></label>}
+        {mode !== 'update' && !verifying && <label>Электронная почта<input required type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></label>}
+        {verifying && <label>Код из письма<input required type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6,8}" maxLength={8} value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))} placeholder="000000" /></label>}
         {['login', 'register', 'update'].includes(mode) && <label>Пароль<input required type="password" minLength={6} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Не менее 6 символов" /></label>}
         {error && <div className="error" role="alert">{error}</div>}
-        <Button type="submit" className="primary full" disabled={busy}>{busy ? 'Подождите…' : mode === 'register' ? 'Создать аккаунт' : mode === 'reset' ? 'Отправить ссылку' : mode === 'update' ? 'Сохранить пароль' : mode === 'otp' ? 'Отправить код' : mode === 'otp_verify' ? 'Подтвердить код' : 'Войти'}<Icon name="arrow_forward" /></Button>
+        <Button type="submit" className="primary full" disabled={busy}>{busy ? 'Подождите…' : mode === 'register' ? 'Создать аккаунт' : mode === 'reset' ? 'Отправить ссылку' : mode === 'update' ? 'Сохранить пароль' : mode === 'otp' ? 'Отправить код' : verifying ? 'Подтвердить код' : 'Войти'}<Icon name="arrow_forward" /></Button>
       </form>
-      <div className="auth-links">{mode === 'login' ? <><button onClick={() => setMode('otp')}>Войти по коду из письма</button><button onClick={() => setMode('reset')}>Забыли пароль?</button><span>Нет аккаунта? <button onClick={() => setMode('register')}>Регистрация</button></span></> : <button onClick={() => { setError(''); setMode('login') }}>Вернуться ко входу</button>}</div>
+      <div className="auth-links">{verifying && <button disabled={busy} onClick={resendCode}>Отправить код повторно</button>}{mode === 'login' ? <><button onClick={() => setMode('otp')}>Войти по коду из письма</button><button onClick={() => setMode('reset')}>Забыли пароль?</button><span>Нет аккаунта? <button onClick={() => setMode('register')}>Регистрация</button></span></> : <button onClick={() => { setError(''); setMode('login') }}>Вернуться ко входу</button>}</div>
     </motion.div>
   </div>
 }
